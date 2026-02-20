@@ -1,0 +1,32 @@
+CompileFlags:
+  Add: [
+    -Wall, -Wextra,
+  ]
+
+---
+
+If:
+  PathMatch: .*\.cpp
+CompileFlags:
+  Add: [-xc, -std=c++23]
+
+---
+
+If:
+  PathMatch: .*\.hpp
+CompileFlags:
+  Add: [-xc-header, -std=c++23]
+
+---
+
+If:
+  PathMatch: .*\.c
+CompileFlags:
+  Add: [-xc, -std=c23]
+
+---
+
+If:
+  PathMatch: .*\.h
+CompileFlags:
+  Add: [-xc-header, -std=c23]

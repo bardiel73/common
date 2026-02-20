@@ -1,0 +1,12 @@
+BasedOnStyle: Microsoft
+
+AllowShortBlocksOnASingleLine: Always
+AllowShortIfStatementsOnASingleLine: Always
+AllowShortFunctionsOnASingleLine: All
+
+IndentWidth: 4
+
+IndentPPDirectives: None
+PPIndentWidth: 0
+
+IndentExternBlock: NoIndent
