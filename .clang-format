@@ -10,3 +10,5 @@ IndentPPDirectives: None
 PPIndentWidth: 0
 
 IndentExternBlock: NoIndent
+
+ColumnLimit: 0
