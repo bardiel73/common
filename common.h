@@ -32,20 +32,24 @@ bool file_write(uint8_t **file_buffer, uint64_t *file_size, const char *destinat
 
 #define DARRAY_HEADER(type) typeof_unqual(type) *items; uint64_t count; uint64_t capacity
 
+#define darray_size(darrayptr) (sizeof(*((darrayptr)->items)))
+#define darray_type(darrayptr) typeof_unqual(*((darrayptr)->items))
+
 #define darray_add(darrayptr_, input_)\
 do {\
-    if (((darrayptr_)->capacity) < 1)\
+    if (!((darrayptr_)->items))\
     {\
-        (darrayptr_)->items = (typeof_unqual(*((darrayptr_)->items)) *)malloc(sizeof(typeof_unqual(*((darrayptr_)->items))) * 256);\
+        (darrayptr_)->items = (darray_type(darrayptr_) *)malloc(darray_size(darrayptr_) * 256);\
         (darrayptr_)->capacity = 256;\
         (darrayptr_)->count = 0;\
     }\
     if ((darrayptr_)->count + 1 >= (darrayptr_)->capacity)\
     {\
-        (darrayptr_)->items = (uint64_t *)realloc((darrayptr_)->items, (darrayptr_)->capacity * 2);\
+        (darrayptr_)->items = (darray_type(darrayptr_) *)realloc((darrayptr_)->items, (darrayptr_)->capacity * 2 * darray_size(darrayptr_));\
         (darrayptr_)->capacity *= 2;\
     }\
-    (darrayptr_)->items[(darrayptr_)->count++] = (input_);\
+    (darrayptr_)->items[(darrayptr_)->count] = (input_);\
+    (darrayptr_)->count += 1;\
 } while(0)
 
 #define darray_reserve(darrayptr__, newcapacity__)\
@@ -54,12 +58,12 @@ do {\
     {\
         if (!((darrayptr__)->items))\
         {\
-            (darrayptr__)->items = (typeof_unqual(*((darrayptr__)->items)) *)malloc((newcapacity__));\
+            (darrayptr__)->items = (darray_type(darrayptr__) *)malloc(darray_size(darrayptr__) * 256);\
             (darrayptr__)->capacity = (newcapacity__);\
         }\
         else\
         {\
-            (darrayptr__)->items = (typeof_unqual(*((darrayptr__)->items)) *)realloc((darrayptr__)->items, (newcapacity__));\
+            (darrayptr__)->items = (darray_type(darrayptr__) *)realloc((darrayptr__)->items, (darrayptr__)->capacity * 2 * darray_size(darrayptr__));\
             (darrayptr__)->capacity = (newcapacity__);\
         }\
     }\
