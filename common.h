@@ -30,6 +30,43 @@ bool file_write(uint8_t **file_buffer, uint64_t *file_size, const char *destinat
 
 #define UNUSED(x) (void)(x)
 
+#define DARRAY_HEADER(type) typeof_unqual(type) *items; uint64_t count; uint64_t capacity
+
+#define darray_add(darrayptr_, input_)\
+do {\
+    if (((darrayptr_)->capacity) < 1)\
+    {\
+        (darrayptr_)->items = (typeof_unqual(*((darrayptr_)->items)) *)malloc(sizeof(typeof_unqual(*((darrayptr_)->items))) * 256);\
+        (darrayptr_)->capacity = 256;\
+        (darrayptr_)->count = 0;\
+    }\
+    if ((darrayptr_)->count + 1 >= (darrayptr_)->capacity)\
+    {\
+        (darrayptr_)->items = (uint64_t *)realloc((darrayptr_)->items, (darrayptr_)->capacity * 2);\
+        (darrayptr_)->capacity *= 2;\
+    }\
+    (darrayptr_)->items[(darrayptr_)->count++] = (input_);\
+} while(0)
+
+#define darray_reserve(darrayptr__, newcapacity__)\
+do {\
+    if ((darrayptr__)->capacity <= (newcapacity__))\
+    {\
+        if (!((darrayptr__)->items))\
+        {\
+            (darrayptr__)->items = (typeof_unqual(*((darrayptr__)->items)) *)malloc((newcapacity__));\
+            (darrayptr__)->capacity = (newcapacity__);\
+        }\
+        else\
+        {\
+            (darrayptr__)->items = (typeof_unqual(*((darrayptr__)->items)) *)realloc((darrayptr__)->items, (newcapacity__));\
+            (darrayptr__)->capacity = (newcapacity__);\
+        }\
+    }\
+} while(0)
+
+#define darray_clear(darrayptr___) do {(darrayptr___)->count = 0;} while(0)
+
 // clang-format on
 // ##########################################
 
