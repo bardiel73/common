@@ -39,7 +39,7 @@ bool file_write(uint8_t **file_buffer, uint64_t *file_size, const char *destinat
 #define darray_size(darrayptr) (sizeof(*((darrayptr)->items)))
 #define darray_type(darrayptr) typeof_unqual(*((darrayptr)->items))
 
-#define darray_add(darrayptr_, input_)\
+#define darray_add(darrayptr_, ...)\
 do {\
     if (!((darrayptr_)->items))\
     {\
@@ -52,7 +52,7 @@ do {\
         (darrayptr_)->items = (darray_type(darrayptr_) *)realloc((darrayptr_)->items, (darrayptr_)->capacity * 2 * darray_size(darrayptr_));\
         (darrayptr_)->capacity *= 2;\
     }\
-    (darrayptr_)->items[(darrayptr_)->count] = (input_);\
+    (darrayptr_)->items[(darrayptr_)->count] = (__VA_ARGS__);\
     (darrayptr_)->count += 1;\
 } while(0)
 
