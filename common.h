@@ -32,6 +32,10 @@ bool file_write(uint8_t **file_buffer, uint64_t *file_size, const char *destinat
 
 #define DARRAY_HEADER(type) typeof_unqual(type) *items; uint64_t count; uint64_t capacity
 
+// ##########################################
+
+#define darray_print_stats(darrayptr) printf("%s: count = %llu, capacity = %llu\n", STR(darrayptr), (darrayptr)->count, (darrayptr)->capacity)
+
 #define darray_size(darrayptr) (sizeof(*((darrayptr)->items)))
 #define darray_type(darrayptr) typeof_unqual(*((darrayptr)->items))
 
