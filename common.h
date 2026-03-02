@@ -11,73 +11,36 @@ extern "C"
 
 // ##########################################
 
-bool file_read(uint8_t **file_buffer, uint64_t *file_size, const char *source_filename);
-bool file_write(uint8_t **file_buffer, uint64_t *file_size, const char *destination_filename);
+bool bard_file_read(uint8_t **file_buffer, uint64_t *file_size, const char *source_filename);
+bool bard_file_write(uint8_t **file_buffer, uint64_t *file_size, const char *destination_filename);
 
 // ##########################################
 // clang-format off
 
-#define STR_(x) #x
-#define STR(x) STR_(x)
+#define STRINGIFY_(x) #x
+#define STRINGIFY(x) STRINGIFY_(x)
 
 #define CONCAT_(x, y) x##y
 #define CONCAT(x, y) CONCAT_(x, y)
 
-#define ARRAY_LEN(x) (sizeof((x)) / sizeof((x)[0]))
+#define ARRAYLEN(x) (sizeof((x)) / sizeof((x)[0]))
 
 #define DEBUG_BREAK() __builtin_trap()
-#define ASSERT(x, ...) if (!(x)) {DEBUG_BREAK();}
+#define ASSERT(x) do { if (!(x)) { DEBUG_BREAK(); } } while (0)
 
 #define UNUSED(x) (void)(x)
 
-#define DARRAY_HEADER(type) typeof_unqual(type) *items; uint64_t count; uint64_t capacity
-
-// ##########################################
-
-#define darray_print_stats(darrayptr) printf("%s: count = %llu, capacity = %llu\n", STR(darrayptr), (darrayptr)->count, (darrayptr)->capacity)
-
-#define darray_size(darrayptr) (sizeof(*((darrayptr)->items)))
-#define darray_type(darrayptr) typeof_unqual(*((darrayptr)->items))
-
-#define darray_add(darrayptr_, ...)\
-do {\
-    if (!((darrayptr_)->items))\
-    {\
-        (darrayptr_)->items = (darray_type(darrayptr_) *)malloc(darray_size(darrayptr_) * 256);\
-        (darrayptr_)->capacity = 256;\
-        (darrayptr_)->count = 0;\
-    }\
-    if ((darrayptr_)->count + 1 >= (darrayptr_)->capacity)\
-    {\
-        (darrayptr_)->items = (darray_type(darrayptr_) *)realloc((darrayptr_)->items, (darrayptr_)->capacity * 2 * darray_size(darrayptr_));\
-        (darrayptr_)->capacity *= 2;\
-    }\
-    (darrayptr_)->items[(darrayptr_)->count] = (__VA_ARGS__);\
-    (darrayptr_)->count += 1;\
-} while(0)
-
-#define darray_reserve(darrayptr__, newcapacity__)\
-do {\
-    if ((darrayptr__)->capacity <= (newcapacity__))\
-    {\
-        if (!((darrayptr__)->items))\
-        {\
-            (darrayptr__)->items = (darray_type(darrayptr__) *)malloc(darray_size(darrayptr__) * 256);\
-            (darrayptr__)->capacity = (newcapacity__);\
-        }\
-        else\
-        {\
-            (darrayptr__)->items = (darray_type(darrayptr__) *)realloc((darrayptr__)->items, (darrayptr__)->capacity * 2 * darray_size(darrayptr__));\
-            (darrayptr__)->capacity = (newcapacity__);\
-        }\
-    }\
-} while(0)
-
-#define darray_clear(darrayptr___) do {(darrayptr___)->count = 0;} while(0)
+// #####################
+#define VEC_HEADER(type) // put inside struct
+#define vec_reserve(vecptr, newcapacity)
+#define vec_push(vecptr, ...)
+#define vec_reset(vecptr)
+#define vec_free(vecptr)
+#define vec_print_stats(vecptr)
+// #####################
 
 // clang-format on
 // ##########################################
-
 #ifdef __cplusplus
 }
 #endif // __cplusplus
@@ -94,7 +57,57 @@ extern "C"
 #include <stdio.h>  // IWYU pragma: keep
 #include <stdlib.h> // IWYU pragma: keep
 
-bool file_read(uint8_t **file_buffer, uint64_t *file_size, const char *source_filename)
+#undef VEC_HEADER
+#undef vec_print_stats
+#undef vec_reserve
+#undef vec_push
+#undef vec_reset
+#undef vec_free
+// clang-format off
+#define VEC_HEADER(type) typeof_unqual(type) *items; uint64_t count; uint64_t capacity
+#define vec_print_stats(vecptr) printf("%s: count = %llu, capacity = %llu\n", STRINGIFY(vecptr), (vecptr)->count, (vecptr)->capacity)
+#define vec_size__(vecptr) (sizeof(*((vecptr)->items)))
+#define vec_type__(vecptr) typeof_unqual(*((vecptr)->items))
+
+#define vec_reserve(vecptr, newcapacity)\
+do {\
+    if ((vecptr)->capacity <= (newcapacity))\
+    {\
+        if (!((vecptr)->items))\
+        {\
+            (vecptr)->items = (vec_type__(vecptr) *)realloc(0, vec_size__(vecptr) * 256);\
+            (vecptr)->capacity = (newcapacity);\
+        }\
+        else\
+        {\
+            (vecptr)->items = (vec_type__(vecptr) *)realloc((vecptr)->items, (vecptr)->capacity * 2 * vec_size__(vecptr));\
+            (vecptr)->capacity = (newcapacity);\
+        }\
+    }\
+} while(0)
+
+#define vec_push(vecptr, ...)\
+do {\
+    if (!((vecptr)->items))\
+    {\
+        (vecptr)->items = (vec_type__(vecptr) *)realloc(0, vec_size__(vecptr) * 256);\
+        (vecptr)->capacity = 256;\
+        (vecptr)->count = 0;\
+    }\
+    if ((vecptr)->count + 1 >= (vecptr)->capacity)\
+    {\
+        (vecptr)->items = (vec_type__(vecptr) *)realloc((vecptr)->items, (vecptr)->capacity * 2 * vec_size__(vecptr));\
+        (vecptr)->capacity *= 2;\
+    }\
+    (vecptr)->items[(vecptr)->count] = (__VA_ARGS__);\
+    (vecptr)->count += 1;\
+} while(0)
+
+#define vec_reset(vecptr) do { (vecptr)->count = 0; } while(0)
+#define vec_free(vecptr) do { (vecptr)->capacity = 0; free((vecptr)->items); } while(0)
+// clang-format on
+
+bool bard_file_read(uint8_t **file_buffer, uint64_t *file_size, const char *source_filename)
 {
     if (!source_filename || !file_buffer) { return false; }
 
@@ -119,7 +132,7 @@ bool file_read(uint8_t **file_buffer, uint64_t *file_size, const char *source_fi
     return true;
 }
 
-bool file_write(uint8_t **file_buffer, uint64_t *file_size, const char *destination_filename)
+bool bard_file_write(uint8_t **file_buffer, uint64_t *file_size, const char *destination_filename)
 {
     if (!destination_filename || !file_buffer) { return false; }
 
